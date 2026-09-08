@@ -19,15 +19,15 @@ webapp/
   .gitignore
   docs/PLANNING.md     this file
   docs/TASK.md         current work
-  src/index.html       the entire web app (CSS + core + UI)
-  src/_headers         Cloudflare Pages headers (not served as a page)
+  public/index.html    the entire web app (CSS + core + UI)
+  public/_headers      Cloudflare Pages headers (not served as a page)
 ```
 
 Stay inside this repository root unless explicitly asked to look elsewhere.
 
-Cloudflare Pages publishes **only** `src/` (dashboard: framework None, empty build command or `exit 0`, output directory `src`). Do not add Wrangler, `wrangler.toml`, or Pages Functions unless that decision is made on purpose.
+Cloudflare Pages publishes **only** `public/` (dashboard: framework None, empty build command or `exit 0`, output directory `public`). Do not add Wrangler, `wrangler.toml`, or Pages Functions unless that decision is made on purpose.
 
-## Architecture of `src/index.html`
+## Architecture of `public/index.html`
 
 Two IIFEs, already separated in comments:
 
@@ -61,7 +61,7 @@ Segment categories: `image`, `provenance`, `identity`, `profile`, `structure`. T
 - British English (`en-GB`), calm copy, no hype.
 - ES5-era JavaScript (`var`, IIFEs, `"use strict"`) so it runs in old browsers without a toolchain. Prefer that unless we explicitly adopt a module+build path.
 - Google-style docstrings in Python; XML comments in C# (N/A here).
-- Files under 500 lines. `src/index.html` currently violates this (~1568 lines) — split before adding large features.
+- Files under 500 lines. `public/index.html` currently violates this (~1568 lines) — split before adding large features.
 - Tests live in `/tests`. New core behaviour needs: expected case, edge case, failure case.
 - Extension methods preferred in C# (N/A here).
 
