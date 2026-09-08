@@ -1,0 +1,51 @@
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*:Zone.Identifier
+
+# Editors / IDEs
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local agent / editor state
+.cursor/
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node (for future tests; this app has no build)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+.nyc_output/
+dist/
+
+# Python (for future tests)
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+*.pyc
+
+# Cloudflare local tooling (this project deploys from the Pages dashboard only)
+.wrangler/
+.dev.vars
+.mf/
+
+# Logs and scratch
+*.log
+*.tmp
+*.temp
+.cache/

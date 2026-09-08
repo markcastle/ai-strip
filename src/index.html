@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trace - see what's hidden in your photos</title>
+<style>
+  :root {
+    --bg:        #ffffff;
+    --bg-soft:   #f5f5f7;
+    --ink:       #1a1a1c;
+    --muted:     #6e6e73;
+    --line:      #e4e4e7;
+
+    /* Three colours, three meanings. Nothing else is coloured. */
+    --picture:   #9a9aa0;
+    --ai:        #e0243f;
+    --personal:  #dd8409;
+
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", ui-sans-serif,
+            system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    --ease: cubic-bezier(.32, .72, 0, 1);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 120px; }
+
+  .brand {
+    padding: 30px 0 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---------- intro ---------- */
+
+  .intro { padding: 76px 0 0; text-align: center; }
+
+  h1 {
+    font-size: clamp(36px, 7vw, 58px);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.06;
+    margin: 0 auto 20px;
+    max-width: 15ch;
+  }
+
+  .sub {
+    font-size: clamp(18px, 2.4vw, 21px);
+    color: var(--muted);
+    max-width: 46ch;
+    margin: 0 auto 44px;
+    line-height: 1.45;
+  }
+
+  .drop {
+    border: 2px dashed var(--line);
+    border-radius: 18px;
+    background: var(--bg-soft);
+    padding: 52px 28px;
+    cursor: pointer;
+    transition: border-color .2s var(--ease), background .2s var(--ease), transform .2s var(--ease);
+  }
+  .drop:hover { border-color: #c9c9ce; }
+  .drop.hot { border-color: var(--ai); background: #fff5f6; transform: scale(1.008); }
+  .drop-title { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
+  .drop-hint { font-size: 15px; color: var(--muted); margin: 0; }
+
+  .assurance {
+    margin: 22px auto 0;
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 44ch;
+  }
+
+  /* ---------- result ---------- */
+
+  .result { padding: 40px 0 0; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .result { animation: rise .5s var(--ease) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  }
+
+  .card-head { display: flex; gap: 18px; align-items: center; margin-bottom: 34px; }
+  .thumb {
+    width: 62px; height: 62px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: var(--bg-soft);
+    flex: none;
+  }
+  .card-head .meta { min-width: 0; }
+  .card-head .fname {
+    font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-head .fsize { color: var(--muted); font-size: 15px; }
+
+  .headline {
+    font-size: clamp(27px, 4.4vw, 36px);
+    font-weight: 600;
+    letter-spacing: -0.028em;
+    line-height: 1.15;
+    margin: 0 0 12px;
+  }
+  .standfirst { color: var(--muted); margin: 0 0 34px; max-width: 48ch; }
+
+  /* the bar */
+  .bar {
+    display: flex;
+    height: 14px;
+    border-radius: 7px;
+    overflow: hidden;
+    background: var(--bg-soft);
+  }
+  .bar i { display: block; height: 100%; min-width: 4px; transform-origin: left; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar i { animation: grow .6s var(--ease) both; }
+    @keyframes grow { from { transform: scaleX(0); } }
+  }
+
+  .keys { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 16px; font-size: 15px; }
+  .key { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .key b { color: var(--ink); font-weight: 600; }
+  .swatch { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+  /* findings */
+  .findings { margin: 38px 0 0; border-top: 1px solid var(--line); }
+  .finding {
+    display: flex; gap: 14px;
+    padding: 17px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: flex-start;
+  }
+  .finding .swatch { margin-top: 8px; }
+  .finding .ftitle { font-weight: 600; }
+  .finding .fdetail { color: var(--muted); font-size: 15px; margin-top: 1px; }
+  .finding a { color: var(--ink); }
+
+  .nothing {
+    margin: 38px 0 0;
+    padding: 26px;
+    background: var(--bg-soft);
+    border-radius: 14px;
+    color: var(--muted);
+  }
+  .nothing b { color: var(--ink); }
+
+  /* action */
+  .act { margin: 38px 0 0; }
+
+  button {
+    font: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border: 0;
+    border-radius: 980px;
+    background: var(--ink);
+    color: #fff;
+    padding: 13px 28px;
+    cursor: pointer;
+    transition: opacity .2s var(--ease);
+  }
+  button:hover { opacity: .82; }
+  button.quiet {
+    background: transparent;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 8px 0;
+    font-size: 16px;
+  }
+  button.quiet:hover { color: var(--ink); opacity: 1; }
+  button:focus-visible, .drop:focus-visible, summary:focus-visible, a:focus-visible {
+    outline: 2px solid var(--ai);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  .act-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .opt { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--muted); cursor: pointer; }
+
+  .limit {
+    margin: 18px 0 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 52ch;
+  }
+  .limit b { color: var(--ink); font-weight: 600; }
+
+  .done {
+    margin: 34px 0 0;
+    padding: 24px;
+    background: var(--bg-soft);
+    border-radius: 14px;
+  }
+  .done h3 { margin: 0 0 6px; font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+  .done p { margin: 0 0 18px; color: var(--muted); font-size: 15px; }
+  .done a.save {
+    display: inline-block;
+    background: var(--ink); color: #fff;
+    text-decoration: none;
+    font-weight: 600; font-size: 17px;
+    padding: 13px 28px;
+    border-radius: 980px;
+  }
+  .done a.save:hover { opacity: .82; }
+
+  /* progressive disclosure */
+  details.more { margin-top: 40px; border-top: 1px solid var(--line); padding-top: 20px; }
+  details.more > summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 16px;
+    list-style: none;
+  }
+  details.more > summary::-webkit-details-marker { display: none; }
+  details.more > summary::before { content: "\25B8  "; }
+  details.more[open] > summary::before { content: "\25BE  "; }
+  details.more > summary:hover { color: var(--ink); }
+
+  .panel { padding-top: 26px; }
+  .panel h4 {
+    font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+    margin: 30px 0 12px;
+  }
+  .panel h4:first-child { margin-top: 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 13px; padding: 0 12px 8px 0; }
+  td { padding: 7px 12px 7px 0; vertical-align: top; border-top: 1px solid var(--line); }
+  td.num, th.num { font-family: var(--mono); text-align: right; white-space: nowrap; font-size: 13px; }
+  td.k { white-space: nowrap; font-weight: 500; }
+  td.v { word-break: break-word; color: var(--muted); }
+  tr.warn td.k { color: var(--personal); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 9px; vertical-align: 1px; }
+
+  footer {
+    margin-top: 70px; padding-top: 26px;
+    border-top: 1px solid var(--line);
+    font-size: 14px; color: var(--muted); line-height: 1.6;
+  }
+  footer p { margin: 0 0 14px; max-width: 62ch; }
+  footer b { color: var(--ink); font-weight: 600; }
+  footer a { color: var(--muted); }
+
+  .err { color: var(--ai); }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 0 20px 80px; }
+    .intro { padding: 48px 0 0; }
+    .drop { padding: 40px 20px; }
+    .keys { gap: 6px 18px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="brand">Trace</p>
+
+  <div id="stage">
+    <section class="intro" id="intro">
+      <h1>See what's hidden in your photos.</h1>
+      <p class="sub">Every image carries data you can't see: where it was taken, which camera took it,
+      and whether an AI made it. Trace shows you, then removes it.</p>
+
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a photo to check">
+        <p class="drop-title">Drop a photo here</p>
+        <p class="drop-hint">or click to choose &middot; JPEG, PNG, WebP, HEIC</p>
+      </div>
+
+      <p class="assurance">Your photo never leaves this device. Trace makes no network requests
+      and works with the internet switched off.</p>
+
+      <input type="file" id="picker" accept="image/*" hidden>
+    </section>
+  </div>
+
+  <footer>
+    <p><b>What Trace removes.</b> The hidden data stored alongside the picture: GPS coordinates,
+    camera and lens serial numbers, timestamps, editing history, generation prompts, and C2PA
+    Content Credentials. The picture itself is copied across byte for byte, so cleaning costs you
+    no image quality, however many times you do it.</p>
+
+    <p><b>What Trace cannot remove.</b> Some AI images also carry an invisible watermark such as
+    SynthID, which is part of the pixels rather than the file's data. Cropping, filters, screenshots
+    and this tool all leave it intact, and no tool that works on metadata can detect or remove it.
+    Trace will never tell you an image is untraceable, because it can't know that.</p>
+
+    <p>To check for a watermark you need the vendor's own verifier, such as
+    <a href="https://openai.com/verify/">openai.com/verify</a>. Trace reads Content Credentials but
+    does not verify their signatures; for that, use the Content Authenticity Initiative's
+    <a href="https://opensource.contentauthenticity.org/docs/c2pa-js/">c2pa-web</a> library.</p>
+  </footer>
+
+</div>
+
+<script id="trace-core">
+/* =====================================================================
+   Trace core - pure functions, no DOM. Everything below operates on a
+   Uint8Array and returns plain data, which keeps it testable outside a
+   browser and keeps the UI layer thin.
+   ===================================================================== */
+var Trace = (function () {
+  "use strict";
+
+  var CAT = {
+    IMAGE:      "image",       // the actual picture
+    PROVENANCE: "provenance",  // C2PA and friends
+    IDENTITY:   "identity",    // EXIF, XMP, IPTC: who, where, which camera
+    PROFILE:    "profile",     // ICC colour
+    STRUCTURE:  "structure"    // headers, tables, everything load-bearing
+  };
+
+  var CAT_LABEL = {
+    image:      "Picture",
+    provenance: "Provenance",
+    identity:   "Identifying",
+    profile:    "Colour profile",
+    structure:  "Structure"
+  };
+
+  // ---------------------------------------------------------------
+  // Format sniffing
+  // ---------------------------------------------------------------
+
+  function eq(bytes, offset, sig) {
+    for (var i = 0; i < sig.length; i++) {
+      if (bytes[offset + i] !== sig.charCodeAt(i)) return false;
+    }
+    return true;
+  }
+
+  function detect(b) {
+    if (b[0] === 0xff && b[1] === 0xd8) return "jpeg";
+    if (b[0] === 0x89 && eq(b, 1, "PNG")) return "png";
+    if (eq(b, 0, "RIFF") && eq(b, 8, "WEBP")) return "webp";
+    if (eq(b, 4, "ftyp")) return "isobmff";
+    if (eq(b, 0, "GIF8")) return "gif";
+    return null;
+  }
+
+  function be(b, o, n) {
+    var v = 0;
+    for (var i = 0; i < n; i++) v = v * 256 + b[o + i];
+    return v;
+  }
+
+  function le32(b, o) {
+    return b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] * 0x1000000);
+  }
+
+  function ascii(b, o, n) {
+    var s = "";
+    for (var i = 0; i < n && o + i < b.length; i++) s += String.fromCharCode(b[o + i]);
+    return s;
+  }
+
+  // ---------------------------------------------------------------
+  // Container walkers
+  //
+  // Each returns segments that tile the entire file with no gaps, so the
+  // byte map is an honest picture rather than a sampling. Every walker
+  // emits { offset, length, id, note, cat }.
+  // ---------------------------------------------------------------
+
+  var JPEG_MARKERS = {
+    0xc4: "Huffman tables", 0xdb: "Quantisation tables", 0xdd: "Restart interval",
+    0xda: "Scan (image data)", 0xd9: "End of image", 0xfe: "Comment",
+    0xc0: "Frame header", 0xc1: "Frame header", 0xc2: "Frame header (progressive)"
+  };
+
+  function jpegAppNote(payload) {
+    var head = ascii(payload, 0, 34);
+    if (head.indexOf("Exif\0") === 0)             return ["EXIF", CAT.IDENTITY];
+    if (head.indexOf("http://ns.adobe.com/xap") === 0) return ["XMP", CAT.IDENTITY];
+    if (head.indexOf("ICC_PROFILE\0") === 0)      return ["ICC colour profile", CAT.PROFILE];
+    if (head.indexOf("Photoshop 3.0\0") === 0)    return ["Photoshop / IPTC", CAT.IDENTITY];
+    if (head.indexOf("JFIF\0") === 0)             return ["JFIF header", CAT.STRUCTURE];
+    if (head.indexOf("MPF\0") === 0)              return ["Multi-picture data", CAT.IDENTITY];
+    if (head.indexOf("JP") === 0)                 return ["JUMBF - C2PA Content Credentials", CAT.PROVENANCE];
+    if (head.indexOf("Ducky") === 0)              return ["Photoshop save-for-web", CAT.STRUCTURE];
+    if (head.indexOf("Adobe") === 0)              return ["Adobe colour transform", CAT.STRUCTURE];
+    return ["Unrecognised application segment", CAT.IDENTITY];
+  }
+
+  function walkJpeg(b) {
+    var segs = [{ offset: 0, length: 2, id: "SOI", note: "Start of image", cat: CAT.STRUCTURE }];
+    var pos = 2;
+    while (pos < b.length - 1) {
+      if (b[pos] !== 0xff) break;
+      var marker = b[pos + 1];
+      while (marker === 0xff) { pos++; marker = b[pos + 1]; }
+
+      if (marker === 0xda || marker === 0xd9) {
+        segs.push({ offset: pos, length: b.length - pos, id: hex(marker),
+                    note: "Compressed image data", cat: CAT.IMAGE });
+        return segs;
+      }
+      if ((marker >= 0xd0 && marker <= 0xd7) || marker === 0x01) { pos += 2; continue; }
+
+      var len = be(b, pos + 2, 2);
+      var payload = b.subarray(pos + 4, pos + 2 + len);
+      var id, note, cat;
+      if (marker >= 0xe0 && marker <= 0xef) {
+        id = "APP" + (marker - 0xe0);
+        var d = jpegAppNote(payload);
+        note = d[0]; cat = d[1];
+      } else {
+        id = hex(marker);
+        note = JPEG_MARKERS[marker] || "";
+        cat = marker === 0xfe ? CAT.IDENTITY : CAT.STRUCTURE;
+        if (marker === 0xfe) note = "Comment: " + ascii(payload, 0, Math.min(40, payload.length));
+      }
+      segs.push({ offset: pos, length: len + 2, id: id, note: note, cat: cat, marker: marker });
+      pos += 2 + len;
+    }
+    return segs;
+  }
+
+  function hex(n) { return "0x" + n.toString(16).toUpperCase().padStart(2, "0"); }
+
+  var PNG_CHUNKS = {
+    IHDR: ["Header", CAT.STRUCTURE], IDAT: ["Compressed image data", CAT.IMAGE],
+    IEND: ["End", CAT.STRUCTURE],    PLTE: ["Palette", CAT.STRUCTURE],
+    tRNS: ["Transparency", CAT.STRUCTURE], gAMA: ["Gamma", CAT.STRUCTURE],
+    sRGB: ["sRGB intent", CAT.STRUCTURE],  pHYs: ["Pixel dimensions", CAT.STRUCTURE],
+    iCCP: ["ICC colour profile", CAT.PROFILE],
+    eXIf: ["EXIF block", CAT.IDENTITY],  tEXt: ["Text", CAT.IDENTITY],
+    zTXt: ["Compressed text", CAT.IDENTITY], iTXt: ["International text", CAT.IDENTITY],
+    tIME: ["Last modified", CAT.IDENTITY],
+    caBX: ["C2PA Content Credentials", CAT.PROVENANCE],
+    acTL: ["Animation control", CAT.STRUCTURE], fcTL: ["Frame control", CAT.STRUCTURE],
+    fdAT: ["Frame data", CAT.IMAGE]
+  };
+
+  function walkPng(b) {
+    var segs = [{ offset: 0, length: 8, id: "sig", note: "PNG signature", cat: CAT.STRUCTURE }];
+    var pos = 8;
+    while (pos + 8 <= b.length) {
+      var len = be(b, pos, 4);
+      var type = ascii(b, pos + 4, 4);
+      var known = PNG_CHUNKS[type];
+      segs.push({
+        offset: pos, length: len + 12, id: type,
+        note: known ? known[0] : "Non-standard chunk",
+        cat: known ? known[1] : CAT.IDENTITY
+      });
+      pos += 12 + len;
+      if (type === "IEND") break;
+    }
+    if (pos < b.length) {
+      segs.push({ offset: pos, length: b.length - pos, id: "trailing",
+                  note: "Bytes after end of image", cat: CAT.IDENTITY });
+    }
+    return segs;
+  }
+
+  var RIFF_CHUNKS = {
+    "VP8 ": ["Lossy image data", CAT.IMAGE], "VP8L": ["Lossless image data", CAT.IMAGE],
+    "VP8X": ["Extended header", CAT.STRUCTURE], "ALPH": ["Alpha channel", CAT.IMAGE],
+    "ANIM": ["Animation header", CAT.STRUCTURE], "ANMF": ["Animation frame", CAT.IMAGE],
+    "ICCP": ["ICC colour profile", CAT.PROFILE], "EXIF": ["EXIF block", CAT.IDENTITY],
+    "XMP ": ["XMP packet", CAT.IDENTITY], "C2PA": ["C2PA Content Credentials", CAT.PROVENANCE]
+  };
+
+  function walkRiff(b) {
+    var segs = [{ offset: 0, length: 12, id: "RIFF", note: "Container header", cat: CAT.STRUCTURE }];
+    var pos = 12;
+    while (pos + 8 <= b.length) {
+      var type = ascii(b, pos, 4);
+      var len = le32(b, pos + 4);
+      var pad = len & 1;
+      var known = RIFF_CHUNKS[type];
+      segs.push({
+        offset: pos, length: len + 8 + pad, id: type.trim(),
+        note: known ? known[0] : "Non-standard chunk",
+        cat: known ? known[1] : CAT.IDENTITY, riffType: type
+      });
+      pos += 8 + len + pad;
+    }
+    return segs;
+  }
+
+  var C2PA_UUID = [0xd8,0xfe,0xc3,0xd6,0x1b,0x0e,0x48,0x3c,0x92,0x97,0x58,0x28,0x87,0x7e,0xc4,0x81];
+
+  function walkIsobmff(b) {
+    var segs = [], pos = 0;
+    while (pos + 8 <= b.length) {
+      var size = be(b, pos, 4);
+      var type = ascii(b, pos + 4, 4);
+      var header = 8;
+      if (size === 1) { size = be(b, pos + 8, 8); header = 16; }
+      else if (size === 0) { size = b.length - pos; }
+      if (size < header) break;
+
+      var note = "", cat = CAT.STRUCTURE;
+      if (type === "mdat") { note = "Media data (the picture)"; cat = CAT.IMAGE; }
+      else if (type === "meta") { note = "Metadata box"; cat = CAT.IDENTITY; }
+      else if (type === "uuid") {
+        var isC2pa = C2PA_UUID.every(function (v, i) { return b[pos + header + i] === v; });
+        note = isC2pa ? "C2PA Content Credentials" : "Vendor extension box";
+        cat = isC2pa ? CAT.PROVENANCE : CAT.IDENTITY;
+      } else if (type === "ftyp") { note = "File type"; }
+
+      segs.push({ offset: pos, length: size, id: type, note: note, cat: cat });
+      pos += size;
+    }
+    return segs;
+  }
+
+  function walk(b) {
+    switch (detect(b)) {
+      case "jpeg":    return walkJpeg(b);
+      case "png":     return walkPng(b);
+      case "webp":    return walkRiff(b);
+      case "isobmff": return walkIsobmff(b);
+      default:        return [];
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // CBOR
+  //
+  // C2PA claims are CBOR rather than JSON. This covers the subset the
+  // spec uses; anything else throws and the caller degrades gracefully.
+  // ---------------------------------------------------------------
+
+  function cborDecode(bytes) {
+    var pos = 0;
+    var view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+    function item(depth) {
+      if (depth > 48) throw new Error("cbor: too deep");
+      if (pos >= bytes.length) throw new Error("cbor: truncated");
+      var initial = bytes[pos++];
+      var major = initial >> 5, minor = initial & 0x1f;
+      var arg = 0, indefinite = false;
+
+      if (minor < 24) arg = minor;
+      else if (minor === 24) arg = bytes[pos++];
+      else if (minor === 25) { arg = view.getUint16(pos); pos += 2; }
+      else if (minor === 26) { arg = view.getUint32(pos); pos += 4; }
+      else if (minor === 27) { arg = Number(view.getBigUint64(pos)); pos += 8; }
+      else if (minor === 31) indefinite = true;
+      else throw new Error("cbor: reserved " + minor);
+
+      switch (major) {
+        case 0: return arg;
+        case 1: return -1 - arg;
+        case 2: {
+          var raw = bytes.subarray(pos, pos + arg); pos += arg;
+          return raw;
+        }
+        case 3: {
+          var txt = new TextDecoder().decode(bytes.subarray(pos, pos + arg));
+          pos += arg;
+          return txt;
+        }
+        case 4: {
+          var arr = [];
+          if (indefinite) { while (bytes[pos] !== 0xff) arr.push(item(depth + 1)); pos++; }
+          else for (var i = 0; i < arg; i++) arr.push(item(depth + 1));
+          return arr;
+        }
+        case 5: {
+          var obj = {};
+          if (indefinite) {
+            while (bytes[pos] !== 0xff) { var k = item(depth + 1); obj[k] = item(depth + 1); }
+            pos++;
+          } else {
+            for (var j = 0; j < arg; j++) { var k2 = item(depth + 1); obj[k2] = item(depth + 1); }
+          }
+          return obj;
+        }
+        case 6: return item(depth + 1);           // tag: keep the value
+        case 7:
+          if (minor === 20) return false;
+          if (minor === 21) return true;
+          if (minor === 22 || minor === 23) return null;
+          if (minor === 26) { var f = view.getFloat32(pos - 4); return f; }
+          if (minor === 27) { var d = view.getFloat64(pos - 8); return d; }
+          return null;
+      }
+      throw new Error("cbor: bad major " + major);
+    }
+    return item(0);
+  }
+
+  // ---------------------------------------------------------------
+  // JUMBF (ISO/IEC 19566-5)
+  // ---------------------------------------------------------------
+
+  function parseBoxes(b) {
+    var out = [], pos = 0;
+    while (pos + 8 <= b.length) {
+      var size = be(b, pos, 4);
+      var type = ascii(b, pos + 4, 4);
+      var header = 8;
+      if (size === 1) { size = be(b, pos + 8, 8); header = 16; }
+      else if (size === 0) size = b.length - pos;
+      if (size < header || pos + size > b.length) break;
+      out.push({ type: type, payload: b.subarray(pos + header, pos + size) });
+      pos += size;
+    }
+    return out;
+  }
+
+  // A description box carries the label that names its parent, e.g.
+  // "c2pa.claim" or "c2pa.assertions". Layout: 16-byte type UUID, one
+  // toggle byte, then a null-terminated label when bit 1 is set.
+  function jumdLabel(p) {
+    if (p.length < 17) return null;
+    if (!(p[16] & 0x02)) return null;
+    var end = 17;
+    while (end < p.length && p[end] !== 0) end++;
+    return new TextDecoder().decode(p.subarray(17, end));
+  }
+
+  function buildTree(boxes, depth) {
+    depth = depth || 0;
+    if (depth > 16) return [];
+    return boxes.map(function (box) {
+      if (box.type === "jumb") {
+        var label = null, kids = [];
+        parseBoxes(box.payload).forEach(function (k) {
+          if (k.type === "jumd") label = jumdLabel(k.payload);
+          else kids.push(k);
+        });
+        return { kind: "box", label: label, children: buildTree(kids, depth + 1) };
+      }
+      if (box.type === "json") {
+        try { return { kind: "json", data: JSON.parse(new TextDecoder().decode(box.payload)) }; }
+        catch (e) { return { kind: "json", error: true, bytes: box.payload.length }; }
+      }
+      if (box.type === "cbor") {
+        try { return { kind: "cbor", data: cborDecode(box.payload) }; }
+        catch (e) { return { kind: "cbor", error: true, bytes: box.payload.length }; }
+      }
+      return { kind: box.type, bytes: box.payload.length };
+    });
+  }
+
+  function eachLeaf(nodes, path, fn) {
+    nodes.forEach(function (n) {
+      if (n.kind === "box") eachLeaf(n.children, path.concat(n.label || "?"), fn);
+      else fn(path, n);
+    });
+  }
+
+  // Reassembles the manifest store out of whichever container holds it.
+  // JPEG is the awkward one: a marker payload caps out near 64 KB, so a
+  // manifest is split across several APP11 segments, each repeating an
+  // 8-byte packet header plus a copy of the JUMBF LBox/TBox that only
+  // counts once.
+  function extractManifest(b, segs) {
+    var kind = detect(b);
+
+    if (kind === "jpeg") {
+      var parts = [], total = 0;
+      segs.forEach(function (s) {
+        if (s.marker !== 0xeb) return;
+        var body = b.subarray(s.offset + 4, s.offset + s.length);
+        if (!eq(body, 0, "JP")) return;
+        var frag = body.subarray(parts.length ? 16 : 8);
+        parts.push(frag); total += frag.length;
+      });
+      if (!parts.length) return null;
+      var joined = new Uint8Array(total), at = 0;
+      parts.forEach(function (p) { joined.set(p, at); at += p.length; });
+      return { bytes: joined, where: "JPEG APP11 segments" };
+    }
+
+    if (kind === "png") {
+      for (var i = 0; i < segs.length; i++) {
+        if (segs[i].id === "caBX") {
+          return { bytes: b.subarray(segs[i].offset + 8, segs[i].offset + segs[i].length - 4),
+                   where: "PNG caBX chunk" };
+        }
+      }
+      return null;
+    }
+
+    if (kind === "webp") {
+      for (var j = 0; j < segs.length; j++) {
+        if (segs[j].id === "C2PA") {
+          return { bytes: b.subarray(segs[j].offset + 8, segs[j].offset + segs[j].length),
+                   where: "WebP C2PA chunk" };
+        }
+      }
+      return null;
+    }
+
+    if (kind === "isobmff") {
+      for (var k = 0; k < segs.length; k++) {
+        if (segs[k].id === "uuid" && segs[k].cat === CAT.PROVENANCE) {
+          return { bytes: b.subarray(segs[k].offset + 24, segs[k].offset + segs[k].length),
+                   where: "ISOBMFF uuid box" };
+        }
+      }
+    }
+    return null;
+  }
+
+  var GENERATORS = [
+    ["chatgpt", "OpenAI ChatGPT"], ["gpt-image", "OpenAI GPT Image"],
+    ["dall", "OpenAI DALL-E"], ["sora", "OpenAI Sora"], ["openai", "OpenAI"],
+    ["gemini", "Google Gemini"], ["imagen", "Google Imagen"], ["nano banana", "Google"],
+    ["firefly", "Adobe Firefly"], ["photoshop", "Adobe Photoshop"], ["lightroom", "Adobe Lightroom"],
+    ["midjourney", "Midjourney"], ["stability", "Stability AI"], ["stable diffusion", "Stability AI"],
+    ["grok", "xAI Grok"], ["flux", "Black Forest Labs FLUX"], ["leonardo", "Leonardo.Ai"],
+    ["canva", "Canva"], ["designer", "Microsoft Designer"], ["truepic", "Truepic"],
+    ["leica", "Leica"], ["nikon", "Nikon"], ["sony", "Sony"], ["canon", "Canon"]
+  ];
+
+  function matchGenerator(text) {
+    var low = String(text).toLowerCase();
+    for (var i = 0; i < GENERATORS.length; i++) {
+      if (low.indexOf(GENERATORS[i][0]) !== -1) return GENERATORS[i][1];
+    }
+    return null;
+  }
+
+  var SOURCE_TYPES = {
+    trainedAlgorithmicMedia: "made by a trained AI model",
+    compositeWithTrainedAlgorithmicMedia: "partly made by a trained AI model",
+    algorithmicMedia: "machine-generated, not from a trained model",
+    digitalCapture: "captured by a camera",
+    computationalCapture: "camera capture with heavy computation"
+  };
+
+  // Pull out the handful of facts a person actually wants from a store
+  // that may hold several chained manifests, one per tool that touched
+  // the file.
+  function summariseC2pa(blob, where) {
+    var tree = buildTree(parseBoxes(blob));
+    var byManifest = {};
+    var signed = false;
+
+    eachLeaf(tree, [], function (path, leaf) {
+      var label = path.length ? path[path.length - 1] : "?";
+      var id = path.length > 1 ? path[1] : "(store)";
+      var m = byManifest[id] || (byManifest[id] = {
+        id: id, generator: null, title: null, actions: [], assertions: [], signed: false
+      });
+
+      if (label.indexOf("c2pa.signature") === 0) { m.signed = true; signed = true; }
+      if (path.length > 2 && path[path.length - 2].indexOf("c2pa.assertions") === 0) {
+        if (m.assertions.indexOf(label) === -1) m.assertions.push(label);
+      }
+
+      var data = leaf.data;
+      if (!data || typeof data !== "object" || Array.isArray(data)) return;
+
+      if (label.indexOf("c2pa.claim") === 0) {
+        // 2.x writes claim_generator_info as a map; 1.x wrote a list of
+        // them; older files use a flat claim_generator string.
+        var info = data.claim_generator_info;
+        if (Array.isArray(info)) info = info[0];
+        var gen = data.claim_generator;
+        if (!gen && info && typeof info === "object") {
+          gen = [info.name, info.version].filter(Boolean).join(" ");
+        }
+        if (gen) m.generator = gen;
+        if (data["dc:title"] || data.title) m.title = data["dc:title"] || data.title;
+      }
+
+      if (label.indexOf("c2pa.actions") === 0 && Array.isArray(data.actions)) {
+        data.actions.forEach(function (a) {
+          if (!a || typeof a !== "object") return;
+          var agent = a.softwareAgent;
+          if (agent && typeof agent === "object") agent = agent.name;
+          var dst = a.digitalSourceType || "";
+          m.actions.push({
+            action: a.action || null,
+            software: agent || null,
+            sourceType: dst ? dst.split("/").pop() : null
+          });
+        });
+      }
+
+      if (label.indexOf("schema-org") !== -1 && Array.isArray(data.author) && data.author[0]) {
+        if (!m.generator) m.generator = data.author[0].name || null;
+      }
+    });
+
+    var manifests = Object.keys(byManifest)
+      .filter(function (k) { return k !== "(store)"; })
+      .map(function (k) { return byManifest[k]; });
+    if (!manifests.length) manifests = Object.keys(byManifest).map(function (k) { return byManifest[k]; });
+
+    return { where: where, bytes: blob.length, signed: signed,
+             manifests: manifests, certificate: certificateNames(blob) };
+  }
+
+  // Full X.509 parsing would mean a crypto library. The subject fields sit
+  // immediately after a known OID as a length-prefixed string, so a
+  // targeted scan gets the display name. It is a hint, not proof: it means
+  // nothing until the signature itself has been validated, which this page
+  // does not do.
+  function certificateNames(blob) {
+    var oids = [[0x06,0x03,0x55,0x04,0x0a], [0x06,0x03,0x55,0x04,0x03]];
+    var found = [];
+    oids.forEach(function (oid) {
+      for (var i = 0; i + oid.length + 2 < blob.length; i++) {
+        var hit = true;
+        for (var j = 0; j < oid.length; j++) if (blob[i + j] !== oid[j]) { hit = false; break; }
+        if (!hit) continue;
+        var p = i + oid.length;
+        var tag = blob[p];
+        if (tag !== 0x0c && tag !== 0x13 && tag !== 0x16) continue;
+        var len = blob[p + 1];
+        if (len > 64) continue;
+        var name = new TextDecoder().decode(blob.subarray(p + 2, p + 2 + len));
+        if (/^[\x20-\x7e]+$/.test(name) && found.indexOf(name) === -1) found.push(name);
+      }
+    });
+    return found.slice(0, 4);
+  }
+
+  // ---------------------------------------------------------------
+  // EXIF
+  // ---------------------------------------------------------------
+
+  var TAGS = {
+    ifd0: {
+      0x010e: "ImageDescription", 0x010f: "Make", 0x0110: "Model", 0x0112: "Orientation",
+      0x0131: "Software", 0x0132: "DateTime", 0x013b: "Artist", 0x8298: "Copyright",
+      0x011a: "XResolution", 0x011b: "YResolution", 0x0128: "ResolutionUnit",
+      0x8769: "@ExifIFD", 0x8825: "@GPSIFD"
+    },
+    exif: {
+      0x829a: "ExposureTime", 0x829d: "FNumber", 0x8827: "ISOSpeedRatings",
+      0x9003: "DateTimeOriginal", 0x9004: "DateTimeDigitized", 0x9286: "UserComment",
+      0x920a: "FocalLength", 0xa002: "PixelXDimension", 0xa003: "PixelYDimension",
+      0xa430: "CameraOwnerName", 0xa431: "BodySerialNumber", 0xa433: "LensMake",
+      0xa434: "LensModel", 0xa435: "LensSerialNumber", 0xa420: "ImageUniqueID",
+      0x9291: "SubSecTimeOriginal", 0x9209: "Flash"
+    },
+    gps: {
+      1: "GPSLatitudeRef", 2: "GPSLatitude", 3: "GPSLongitudeRef", 4: "GPSLongitude",
+      5: "GPSAltitudeRef", 6: "GPSAltitude", 7: "GPSTimeStamp", 29: "GPSDateStamp",
+      27: "GPSProcessingMethod", 18: "GPSMapDatum"
+    }
+  };
+
+  // Tags that identify a person, a device or a place, as opposed to
+  // describing the exposure. These get flagged in the UI.
+  var REVEALING = {
+    Artist: 1, Copyright: 1, CameraOwnerName: 1, BodySerialNumber: 1,
+    LensSerialNumber: 1, Software: 1, ImageUniqueID: 1, UserComment: 1,
+    ImageDescription: 1, DateTime: 1, DateTimeOriginal: 1, DateTimeDigitized: 1
+  };
+
+  var TYPE_SIZE = [0, 1, 1, 2, 4, 8, 1, 1, 4, 4, 8];
+
+  function parseTiff(t) {
+    if (t.length < 8) return null;
+    var little = t[0] === 0x49;
+    var view = new DataView(t.buffer, t.byteOffset, t.byteLength);
+    var g16 = function (o) { return view.getUint16(o, little); };
+    var g32 = function (o) { return view.getUint32(o, little); };
+    if (g16(2) !== 42) return null;
+
+    function readIfd(offset, names) {
+      var out = {};
+      if (offset + 2 > t.length) return out;
+      var count = g16(offset);
+      for (var i = 0; i < count; i++) {
+        var e = offset + 2 + i * 12;
+        if (e + 12 > t.length) break;
+        var tag = g16(e), type = g16(e + 2), num = g32(e + 4);
+        var size = (TYPE_SIZE[type] || 0) * num;
+        var at = size > 4 ? g32(e + 8) : e + 8;
+        if (!size || at + size > t.length) continue;
+        out[tag] = { name: names[tag] || ("0x" + tag.toString(16).padStart(4, "0")),
+                     value: readValue(type, num, at) };
+      }
+      return out;
+    }
+
+    function readValue(type, num, at) {
+      if (type === 2) {
+        var s = new TextDecoder().decode(t.subarray(at, at + num));
+        return s.replace(/\0+$/, "");
+      }
+      if (type === 7 || type === 1) {
+        var b = t.subarray(at, at + num);
+        var txt = new TextDecoder().decode(b).replace(/^(ASCII|UNICODE|JIS)\0+/, "").replace(/\0+$/, "");
+        return /^[\x20-\x7e\s]*$/.test(txt) && txt.length ? txt : "<" + num + " bytes>";
+      }
+      var vals = [];
+      for (var i = 0; i < num && i < 24; i++) {
+        var o = at + i * TYPE_SIZE[type];
+        if (type === 3) vals.push(g16(o));
+        else if (type === 4) vals.push(g32(o));
+        else if (type === 9) vals.push(view.getInt32(o, little));
+        else if (type === 5 || type === 10) {
+          var n = type === 5 ? g32(o) : view.getInt32(o, little);
+          var d = type === 5 ? g32(o + 4) : view.getInt32(o + 4, little);
+          vals.push(d ? n / d : 0);
+        }
+      }
+      return vals.length === 1 ? vals[0] : vals;
+    }
+
+    var ifd0 = readIfd(g32(4), TAGS.ifd0);
+    var result = { ifd0: ifd0, exif: {}, gps: {} };
+
+    var raw0 = readIfd(g32(4), {});
+    if (raw0[0x8769]) result.exif = readIfd(raw0[0x8769].value, TAGS.exif);
+    if (raw0[0x8825]) result.gps = readIfd(raw0[0x8825].value, TAGS.gps);
+    return result;
+  }
+
+  function findExif(b, segs) {
+    var kind = detect(b);
+    if (kind === "jpeg") {
+      for (var i = 0; i < segs.length; i++) {
+        if (segs[i].marker === 0xe1) {
+          var body = b.subarray(segs[i].offset + 4, segs[i].offset + segs[i].length);
+          if (eq(body, 0, "Exif\0")) return parseTiff(body.subarray(6));
+        }
+      }
+    }
+    if (kind === "png") {
+      for (var j = 0; j < segs.length; j++) {
+        if (segs[j].id === "eXIf") {
+          return parseTiff(b.subarray(segs[j].offset + 8, segs[j].offset + segs[j].length - 4));
+        }
+      }
+    }
+    if (kind === "webp") {
+      for (var k = 0; k < segs.length; k++) {
+        if (segs[k].id === "EXIF") {
+          var d = b.subarray(segs[k].offset + 8, segs[k].offset + segs[k].length);
+          if (eq(d, 0, "Exif\0")) d = d.subarray(6);
+          return parseTiff(d);
+        }
+      }
+    }
+    return null;
+  }
+
+  function gpsToDecimal(gps) {
+    if (!gps || !gps[2] || !gps[4]) return null;
+    function dms(v) {
+      if (!Array.isArray(v) || v.length < 3) return null;
+      return v[0] + v[1] / 60 + v[2] / 3600;
+    }
+    var lat = dms(gps[2].value), lon = dms(gps[4].value);
+    if (lat === null || lon === null) return null;
+    if (gps[1] && String(gps[1].value).toUpperCase().indexOf("S") === 0) lat = -lat;
+    if (gps[3] && String(gps[3].value).toUpperCase().indexOf("W") === 0) lon = -lon;
+    return { lat: lat, lon: lon,
+             altitude: gps[6] ? gps[6].value : null,
+             url: "https://www.openstreetmap.org/?mlat=" + lat.toFixed(6) + "&mlon=" + lon.toFixed(6) + "#map=16/" + lat.toFixed(5) + "/" + lon.toFixed(5) };
+  }
+
+  // ---------------------------------------------------------------
+  // PNG text chunks
+  //
+  // Visible to any library, but worth surfacing loudly because people
+  // rarely realise a Stable Diffusion PNG carries the whole prompt.
+  // ---------------------------------------------------------------
+
+  var TEXT_KEY_MEANING = {
+    parameters: "Automatic1111 / Forge: prompt, negative prompt, seed, sampler, model hash",
+    prompt: "ComfyUI: the API-format node graph",
+    workflow: "ComfyUI: the full editable workflow",
+    "sd-metadata": "InvokeAI generation settings",
+    invokeai_metadata: "InvokeAI generation settings",
+    Dream: "Stable Diffusion fork: the prompt",
+    Comment: "NovelAI and others store generation JSON here",
+    Software: "the tool that wrote the file"
+  };
+
+  function readPngText(b, segs) {
+    var out = [];
+    segs.forEach(function (s) {
+      if (s.id !== "tEXt" && s.id !== "iTXt" && s.id !== "zTXt") return;
+      var data = b.subarray(s.offset + 8, s.offset + s.length - 4);
+      var nul = data.indexOf(0);
+      if (nul < 0) return;
+      var key = new TextDecoder().decode(data.subarray(0, nul));
+      var value;
+      if (s.id === "zTXt") value = "<compressed, " + (data.length - nul) + " bytes>";
+      else if (s.id === "iTXt") {
+        // key \0 compressed \0 method \0 language \0 translated \0 text
+        var p = nul + 3;
+        for (var skips = 0; skips < 2 && p < data.length; skips++) {
+          var n = data.indexOf(0, p);
+          p = n < 0 ? data.length : n + 1;
+        }
+        value = new TextDecoder().decode(data.subarray(p));
+      } else {
+        value = new TextDecoder().decode(data.subarray(nul + 1));
+      }
+      out.push({ key: key, value: value, meaning: TEXT_KEY_MEANING[key] || null });
+    });
+    return out;
+  }
+
+  // ---------------------------------------------------------------
+  // Stripping, without re-encoding
+  //
+  // Every format here is handled by copying the byte ranges worth keeping
+  // and dropping the rest. No canvas, no decode, no re-compression, so a
+  // stripped JPEG is bit-identical in its image data to the original.
+  // ---------------------------------------------------------------
+
+  function concat(parts) {
+    var total = parts.reduce(function (n, p) { return n + p.length; }, 0);
+    var out = new Uint8Array(total), at = 0;
+    parts.forEach(function (p) { out.set(p, at); at += p.length; });
+    return out;
+  }
+
+  function strip(b, opts) {
+    opts = opts || {};
+    var keepProfile = !!opts.keepColourProfile;
+    var kind = detect(b);
+    var segs = walk(b);
+    if (!segs.length) return null;
+
+    if (kind === "jpeg") {
+      var parts = [b.subarray(0, 2)];
+      segs.forEach(function (s) {
+        if (s.id === "SOI") return;
+        var drop = s.cat === CAT.IDENTITY || s.cat === CAT.PROVENANCE ||
+                   (s.cat === CAT.PROFILE && !keepProfile);
+        if (!drop) parts.push(b.subarray(s.offset, s.offset + s.length));
+      });
+      return concat(parts);
+    }
+
+    if (kind === "png") {
+      var out = [b.subarray(0, 8)];
+      segs.forEach(function (s) {
+        if (s.id === "sig") return;
+        var drop = s.cat === CAT.IDENTITY || s.cat === CAT.PROVENANCE ||
+                   (s.cat === CAT.PROFILE && !keepProfile);
+        if (!drop) out.push(b.subarray(s.offset, s.offset + s.length));
+      });
+      return concat(out);
+    }
+
+    if (kind === "webp") {
+      var kept = [];
+      var dropped = { exif: false, xmp: false, icc: false };
+      segs.forEach(function (s) {
+        if (s.id === "RIFF") return;
+        var drop = s.cat === CAT.IDENTITY || s.cat === CAT.PROVENANCE ||
+                   (s.cat === CAT.PROFILE && !keepProfile);
+        if (drop) {
+          if (s.id === "EXIF") dropped.exif = true;
+          if (s.id === "XMP") dropped.xmp = true;
+          if (s.id === "ICCP") dropped.icc = true;
+          return;
+        }
+        var chunk = b.slice(s.offset, s.offset + s.length);
+        // VP8X advertises which optional chunks follow. Leaving those flags
+        // set after removing the chunks produces a file some decoders
+        // reject, so clear the bits we just invalidated.
+        if (s.id === "VP8X" && chunk.length > 8) {
+          chunk[8] &= ~0x08;                              // EXIF
+          chunk[8] &= ~0x04;                              // XMP
+          if (!keepProfile) chunk[8] &= ~0x20;            // ICC
+        }
+        kept.push(chunk);
+      });
+      var body = concat(kept);
+      var head = new Uint8Array(12);
+      head.set([0x52, 0x49, 0x46, 0x46]);                 // "RIFF"
+      var size = body.length + 4;
+      head[4] = size & 255; head[5] = (size >> 8) & 255;
+      head[6] = (size >> 16) & 255; head[7] = (size >> 24) & 255;
+      head.set([0x57, 0x45, 0x42, 0x50], 8);              // "WEBP"
+      return concat([head, body]);
+    }
+
+    return null;   // ISOBMFF and GIF: read-only for now
+  }
+
+  // ---------------------------------------------------------------
+  // Everything, for one file
+  // ---------------------------------------------------------------
+
+  function inspect(bytes) {
+    var segs = walk(bytes);
+    var report = {
+      format: detect(bytes),
+      size: bytes.length,
+      segments: segs,
+      signals: [],
+      canStrip: false
+    };
+    if (!segs.length) return report;
+
+    report.canStrip = ["jpeg", "png", "webp"].indexOf(report.format) !== -1;
+
+    var manifest = extractManifest(bytes, segs);
+    if (manifest) {
+      try {
+        report.c2pa = summariseC2pa(manifest.bytes, manifest.where);
+        report.c2pa.manifests.forEach(function (m) {
+          if (m.generator) {
+            var friendly = matchGenerator(m.generator);
+            report.signals.push({
+              weight: "high",
+              text: "Carries a C2PA manifest naming " + (friendly || "an unrecognised tool") +
+                    " as its claim generator (" + m.generator + ")."
+            });
+          }
+          m.actions.forEach(function (a) {
+            if (a.sourceType && SOURCE_TYPES[a.sourceType]) {
+              report.signals.push({
+                weight: a.sourceType.indexOf("trained") !== -1 ? "high" : "low",
+                text: "Declares '" + a.action + "': " + SOURCE_TYPES[a.sourceType] +
+                      (a.software ? ", by " + a.software : "") + "."
+              });
+            }
+          });
+        });
+      } catch (e) {
+        report.c2pa = { where: manifest.where, bytes: manifest.bytes.length,
+                        manifests: [], error: String(e) };
+      }
+    }
+
+    report.exif = findExif(bytes, segs);
+    if (report.exif) {
+      report.location = gpsToDecimal(report.exif.gps);
+      var sw = report.exif.ifd0[0x0131];
+      if (sw) {
+        var g = matchGenerator(sw.value);
+        if (g) report.signals.push({ weight: "low", text: "EXIF Software field names " + g + ": " + sw.value + "." });
+      }
+    }
+
+    if (report.format === "png") {
+      report.text = readPngText(bytes, segs);
+      report.text.forEach(function (t) {
+        if (TEXT_KEY_MEANING[t.key] && t.key !== "Software") {
+          report.signals.push({ weight: "high", text: "PNG text chunk '" + t.key + "' - " + t.meaning + "." });
+        }
+      });
+    }
+
+    // The IPTC vocabulary term turns up in XMP and IPTC blocks too, in
+    // plain text, so a raw scan catches files whose C2PA we couldn't parse.
+    var haystack = ascii(bytes, 0, Math.min(bytes.length, 400000));
+    Object.keys(SOURCE_TYPES).forEach(function (term) {
+      if (haystack.indexOf(term) !== -1 &&
+          !report.signals.some(function (s) { return s.text.indexOf(SOURCE_TYPES[term]) !== -1; })) {
+        report.signals.push({ weight: "high", text: "Contains the marker '" + term + "': " + SOURCE_TYPES[term] + "." });
+      }
+    });
+
+    return report;
+  }
+
+  function totals(segs) {
+    var by = {};
+    segs.forEach(function (s) { by[s.cat] = (by[s.cat] || 0) + s.length; });
+    return by;
+  }
+
+  return {
+    CAT: CAT, CAT_LABEL: CAT_LABEL, REVEALING: REVEALING,
+    detect: detect, walk: walk, inspect: inspect, strip: strip, totals: totals,
+    cborDecode: cborDecode, parseBoxes: parseBoxes, buildTree: buildTree,
+    extractManifest: extractManifest, summariseC2pa: summariseC2pa, parseTiff: parseTiff
+  };
+})();
+if (typeof module !== "undefined") module.exports = Trace;
+</script>
+
+<script>
+/* ===================================================================
+   Presentation layer. Turns a Trace.inspect() report into the two
+   things a person actually wants: a one-line answer, and a short list
+   of what was found. Everything else lives behind "Show details".
+   =================================================================== */
+(function () {
+  "use strict";
+
+  var stage  = document.getElementById("stage");
+  var intro  = document.getElementById("intro");
+  var drop   = document.getElementById("drop");
+  var picker = document.getElementById("picker");
+
+  var current = null;   // object URL of the photo on screen, revoked on replace
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function fileSize(bytes) {
+    if (bytes < 1024) return bytes + " bytes";
+    if (bytes < 10240) return (bytes / 1024).toFixed(1) + " KB";
+    if (bytes < 1048576) return Math.round(bytes / 1024) + " KB";
+    return (bytes / 1048576).toFixed(1) + " MB";
+  }
+
+  // Rounding must never claim a slice is the whole file when it isn't,
+  // or the shares visibly sum to more than 100 and the chart loses trust.
+  function share(part, whole) {
+    var p = part / whole * 100;
+    if (p >= 99.5 && part < whole) return ">99%";
+    if (p < 1) return "<1%";
+    return Math.round(p) + "%";
+  }
+
+  // ---------------------------------------------------------------
+  // Three buckets, not fifteen segments. Anything the file genuinely
+  // needs in order to be a picture counts as the picture: headers,
+  // compression tables and colour profiles are not hidden data, and
+  // showing them separately only makes the chart harder to read.
+  // ---------------------------------------------------------------
+
+  function buckets(report) {
+    var by = Trace.totals(report.segments);
+    var picture = (by.image || 0) + (by.structure || 0) + (by.profile || 0);
+    return [
+      { key: "picture",  label: "The picture",         bytes: picture },
+      { key: "ai",       label: "AI Content Credentials", bytes: by.provenance || 0 },
+      { key: "personal", label: "Personal data",       bytes: by.identity || 0 }
+    ].filter(function (b) { return b.bytes > 0; });
+  }
+
+  // ---------------------------------------------------------------
+  // Findings, phrased as what it means rather than where it was found.
+  // ---------------------------------------------------------------
+
+  function findings(report) {
+    var list = [];
+
+    if (report.c2pa) {
+      var gens = report.c2pa.manifests.map(function (m) { return m.generator; }).filter(Boolean);
+      var made = null;
+      report.c2pa.manifests.forEach(function (m) {
+        m.actions.forEach(function (a) {
+          if (a.sourceType && a.sourceType.indexOf("trained") !== -1) made = a.software || gens[0];
+        });
+      });
+      list.push({
+        tone: "ai",
+        title: made ? "Made by AI" : "Content Credentials attached",
+        detail: made
+          ? "The file states it was generated by " + esc(made) + ", and carries a signed record saying so."
+          : "A signed record of how this file was made" +
+            (gens.length ? ", written by " + esc(gens[gens.length - 1]) : "") + "."
+      });
+      if (report.c2pa.certificate.length) {
+        list.push({
+          tone: "ai",
+          title: "Signed by " + esc(report.c2pa.certificate[0]),
+          detail: "Trace doesn't check the signature, so read this as a claim rather than proof."
+        });
+      }
+    }
+
+    if (report.location) {
+      var l = report.location;
+      list.push({
+        tone: "personal",
+        title: "Your location",
+        detail: l.lat.toFixed(4) + ", " + l.lon.toFixed(4) +
+                ' &middot; <a href="' + l.url + '" target="_blank" rel="noopener noreferrer">see it on a map</a>'
+      });
+    }
+
+    if (report.exif) {
+      var e = report.exif;
+      var name = function (group, tag) { return group[tag] ? String(group[tag].value).trim() : null; };
+
+      var make = name(e.ifd0, 0x010f), model = name(e.ifd0, 0x0110);
+      if (make || model) {
+        list.push({ tone: "personal", title: "The camera or phone used",
+                    detail: esc([make, model].filter(Boolean).join(" ")) });
+      }
+
+      var serials = [name(e.exif, 0xa431), name(e.exif, 0xa435)].filter(Boolean);
+      if (serials.length) {
+        list.push({ tone: "personal", title: "Serial numbers",
+                    detail: "This links every photo from this device to the same owner." });
+      }
+
+      var who = [name(e.ifd0, 0x013b), name(e.ifd0, 0x8298), name(e.exif, 0xa430)].filter(Boolean);
+      if (who.length) {
+        list.push({ tone: "personal", title: "A name", detail: esc(who.join(" &middot; ")) });
+      }
+
+      var when = name(e.exif, 0x9003) || name(e.ifd0, 0x0132);
+      if (when) list.push({ tone: "personal", title: "When it was taken", detail: esc(when) });
+
+      var sw = name(e.ifd0, 0x0131);
+      if (sw) list.push({ tone: "personal", title: "The software that touched it last", detail: esc(sw) });
+    }
+
+    if (report.text) {
+      report.text.forEach(function (t) {
+        if (!t.meaning || t.key === "Software") return;
+        list.push({
+          tone: "ai",
+          title: t.key === "parameters" || t.key === "Dream" ? "The prompt used to generate it"
+                                                             : "Generation settings",
+          detail: esc(t.value.slice(0, 150)) + (t.value.length > 150 ? "&hellip;" : "")
+        });
+      });
+    }
+
+    return list;
+  }
+
+  function headlineFor(report, found) {
+    if (report.c2pa) {
+      var made = null;
+      report.c2pa.manifests.forEach(function (m) {
+        m.actions.forEach(function (a) {
+          if (a.sourceType && a.sourceType.indexOf("trained") !== -1) made = a.software || m.generator;
+        });
+      });
+      if (made) return { h: "This image was made by AI.", s: "It carries a signed record naming " + esc(made) + ". Anyone can read it." };
+      return { h: "This image carries Content Credentials.", s: "A record of how it was created, written into the file." };
+    }
+    if (report.location) return { h: "This photo knows where you were.", s: "Along with other details about you and your camera." };
+    if (found.length)  return { h: "This photo carries hidden data.", s: "None of it is the picture, and all of it travels with the file." };
+    return { h: "Nothing hidden in here.", s: "This file is just the picture." };
+  }
+
+  // ---------------------------------------------------------------
+  // Details panel: the old inspector, tucked away.
+  // ---------------------------------------------------------------
+
+  function detailPanel(report) {
+    var html = '<div class="panel">';
+
+    html += "<h4>Every part of the file</h4><table><thead><tr>" +
+            '<th class="num">Offset</th><th class="num">Bytes</th><th>Part</th><th>What it is</th>' +
+            "</tr></thead><tbody>";
+    report.segments.forEach(function (s) {
+      var tone = s.cat === "provenance" ? "ai" : (s.cat === "identity" ? "personal" : "picture");
+      html += '<tr><td class="num">' + s.offset.toLocaleString("en-GB") + "</td>" +
+              '<td class="num">' + s.length.toLocaleString("en-GB") + "</td>" +
+              '<td class="k"><i class="dot" style="background:var(--' + tone + ')"></i>' + esc(s.id) + "</td>" +
+              '<td class="v">' + esc(s.note) + "</td></tr>";
+    });
+    html += "</tbody></table>";
+
+    if (report.exif) {
+      var rows = "";
+      [["ifd0", "Image"], ["exif", "Camera"], ["gps", "Location"]].forEach(function (g) {
+        Object.keys(report.exif[g[0]]).forEach(function (tag) {
+          var t = report.exif[g[0]][tag];
+          if (t.name.charAt(0) === "@") return;
+          var v = Array.isArray(t.value)
+            ? t.value.map(function (x) { return typeof x === "number" ? Math.round(x * 10000) / 10000 : x; }).join(", ")
+            : t.value;
+          rows += '<tr class="' + (Trace.REVEALING[t.name] || g[0] === "gps" ? "warn" : "") + '">' +
+                  '<td class="k">' + esc(t.name) + "</td>" +
+                  '<td class="v">' + esc(String(v).slice(0, 240)) + "</td></tr>";
+        });
+      });
+      if (rows) html += "<h4>EXIF tags</h4><table><tbody>" + rows + "</tbody></table>";
+    }
+
+    if (report.c2pa) {
+      var c = report.c2pa;
+      html += "<h4>Content Credentials</h4><table><tbody>" +
+              '<tr><td class="k">Stored in</td><td class="v">' + esc(c.where) + "</td></tr>" +
+              '<tr><td class="k">Size</td><td class="v">' + c.bytes.toLocaleString("en-GB") + " bytes</td></tr>" +
+              '<tr><td class="k">Signature</td><td class="v">' +
+                (c.signed ? "present, not verified by Trace" : "none found") + "</td></tr>";
+      if (c.certificate.length) {
+        html += '<tr><td class="k">Certificate</td><td class="v">' + esc(c.certificate.join(", ")) + "</td></tr>";
+      }
+      c.manifests.forEach(function (m, i) {
+        var n = c.manifests.length > 1 ? " " + (i + 1) : "";
+        if (m.generator) html += '<tr><td class="k">Made with' + n + '</td><td class="v">' + esc(m.generator) + "</td></tr>";
+        m.actions.forEach(function (a) {
+          html += '<tr><td class="k">Action</td><td class="v">' + esc(a.action || "?") +
+                  (a.software ? " by " + esc(a.software) : "") +
+                  (a.sourceType ? " (" + esc(a.sourceType) + ")" : "") + "</td></tr>";
+        });
+        if (m.assertions.length) {
+          html += '<tr><td class="k">Assertions</td><td class="v">' + esc(m.assertions.join(", ")) + "</td></tr>";
+        }
+      });
+      html += "</tbody></table>";
+    }
+
+    if (report.text && report.text.length) {
+      html += "<h4>Embedded text</h4><table><tbody>";
+      report.text.forEach(function (t) {
+        html += '<tr><td class="k">' + esc(t.key) + '</td><td class="v">' +
+                esc(t.value.slice(0, 800)) + (t.value.length > 800 ? "&hellip;" : "") + "</td></tr>";
+      });
+      html += "</tbody></table>";
+    }
+
+    return html + "</div>";
+  }
+
+  // ---------------------------------------------------------------
+  // Render. One photo on screen at a time: a new drop replaces the
+  // last one rather than stacking up a pile of reports.
+  // ---------------------------------------------------------------
+
+  function barHtml(list, total) {
+    return '<div class="bar">' + list.map(function (b) {
+      return '<i style="flex:' + b.bytes + ' 1 0;background:var(--' + b.key + ')"></i>';
+    }).join("") + "</div>" +
+    '<div class="keys">' + list.map(function (b) {
+      return '<span class="key"><i class="swatch" style="background:var(--' + b.key + ')"></i>' +
+             b.label + " <b>" + share(b.bytes, total) + "</b></span>";
+    }).join("") + "</div>";
+  }
+
+  function render(file, bytes) {
+    if (current) URL.revokeObjectURL(current);
+    current = URL.createObjectURL(file);
+
+    var report;
+    try { report = Trace.inspect(bytes); }
+    catch (err) { return fail(file, "Trace couldn't read this file: " + err.message); }
+    if (!report.format) return fail(file, "Trace reads JPEG, PNG, WebP, HEIC and AVIF. This is something else.");
+
+    var found = findings(report);
+    var head = headlineFor(report, found);
+    var groups = buckets(report);
+
+    var el = document.createElement("section");
+    el.className = "result";
+    el.innerHTML =
+      '<div class="card-head">' +
+        '<img class="thumb" src="' + current + '" alt="">' +
+        '<div class="meta"><div class="fname">' + esc(file.name) + "</div>" +
+        '<div class="fsize">' + report.format.toUpperCase() + " &middot; " + fileSize(report.size) + "</div></div>" +
+      "</div>" +
+      '<h2 class="headline">' + head.h + "</h2>" +
+      '<p class="standfirst">' + head.s + "</p>" +
+      barHtml(groups, report.size) +
+      (found.length
+        ? '<div class="findings">' + found.map(function (f) {
+            return '<div class="finding"><i class="swatch" style="background:var(--' + f.tone + ')"></i>' +
+                   '<div><div class="ftitle">' + f.title + '</div>' +
+                   '<div class="fdetail">' + f.detail + "</div></div></div>";
+          }).join("") + "</div>"
+        : '<div class="nothing"><b>Nothing to remove.</b> No location, no camera details, ' +
+          "no Content Credentials. Either this file was already cleaned, or whatever made it " +
+          "never wrote any of that in.</div>") +
+      '<div class="act"></div>' +
+      '<details class="more"><summary>Show technical details</summary>' + detailPanel(report) + "</details>";
+
+    var act = el.querySelector(".act");
+    if (report.canStrip && found.length) {
+      act.innerHTML =
+        '<div class="act-row"><button class="go">Remove hidden data</button>' +
+        '<label class="opt"><input type="checkbox" class="keep" checked> Keep colour accuracy</label></div>' +
+        '<p class="limit">This rewrites the file without the hidden parts and without touching the picture. ' +
+        "It does <b>not</b> remove an invisible watermark like SynthID, which lives in the pixels and " +
+        "survives any metadata tool.</p>";
+
+      act.querySelector(".go").addEventListener("click", function () {
+        var clean = Trace.strip(bytes, { keepColourProfile: act.querySelector(".keep").checked });
+        if (!clean) return;
+        var url = URL.createObjectURL(new Blob([clean], { type: file.type || "application/octet-stream" }));
+        var ext = (file.name.match(/(\.[^.]+)$/) || [""])[0];
+        var name = file.name.slice(0, file.name.length - ext.length) + "-clean" + ext;
+        act.innerHTML =
+          '<div class="done"><h3>Cleaned.</h3>' +
+          "<p>" + fileSize(report.size) + " became " + fileSize(clean.length) + ". " +
+          "The picture is identical, pixel for pixel.</p>" +
+          '<a class="save" href="' + url + '" download="' + esc(name) + '">Save clean photo</a></div>';
+      });
+    } else if (!report.canStrip && found.length) {
+      act.innerHTML = '<p class="limit">Trace can read this format but can only clean JPEG, PNG and WebP so far.</p>';
+    }
+
+    show(el);
+  }
+
+  function fail(file, message) {
+    var el = document.createElement("section");
+    el.className = "result";
+    el.innerHTML = '<h2 class="headline">' + esc(file.name) + '</h2><p class="err">' + esc(message) + "</p>";
+    show(el);
+  }
+
+  function show(el) {
+    stage.innerHTML = "";
+    stage.appendChild(el);
+    var again = document.createElement("button");
+    again.className = "quiet again";
+    again.textContent = "Check another photo";
+    again.style.marginTop = "34px";
+    again.addEventListener("click", reset);
+    el.appendChild(again);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function reset() {
+    if (current) { URL.revokeObjectURL(current); current = null; }
+    stage.innerHTML = "";
+    stage.appendChild(intro);
+    picker.value = "";
+  }
+
+  // ---------------------------------------------------------------
+  // Input
+  // ---------------------------------------------------------------
+
+  function accept(files) {
+    if (!files || !files.length) return;
+    var file = files[0];               // one photo at a time, by design
+    var reader = new FileReader();
+    reader.onload = function () { render(file, new Uint8Array(reader.result)); };
+    reader.onerror = function () { fail(file, "The file couldn't be read."); };
+    reader.readAsArrayBuffer(file);
+  }
+
+  drop.addEventListener("click", function () { picker.click(); });
+  drop.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); picker.click(); }
+  });
+  picker.addEventListener("change", function (e) { accept(e.target.files); });
+
+  ["dragenter", "dragover"].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("hot"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("hot"); });
+  });
+
+  // Dropping anywhere on the page works, including over an existing result.
+  document.addEventListener("dragover", function (e) { e.preventDefault(); });
+  document.addEventListener("drop", function (e) {
+    e.preventDefault();
+    accept(e.dataTransfer && e.dataTransfer.files);
+  });
+})();
+</script>
+</body>
+</html>
