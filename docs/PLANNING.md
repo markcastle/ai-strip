@@ -1,4 +1,4 @@
-# PLANNING.md — Trace (AiStrip webapp)
+# PLANNING.md — AiStrip
 
 Offline browser tool that shows what an image file is carrying (location, camera identity, generation prompts, C2PA Content Credentials) and strips that data without re-encoding the picture.
 
@@ -34,7 +34,7 @@ Two IIFEs, already separated in comments:
 | Block | Role |
 | --- | --- |
 | CSS + HTML shell | Three semantic colours only: picture (grey), AI (red), personal (orange). |
-| `Trace` core (`<script id="trace-core">`) | Pure functions on `Uint8Array`. No DOM. `module.exports = Trace` for Node. |
+| `AiStrip` core (`<script id="aistrip-core">`) | Pure functions on `Uint8Array`. No DOM. `module.exports = AiStrip` for Node. |
 | Presentation IIFE | Drop zone, headlines, findings, download. Thin. |
 
 Core pipeline: `detect` → `walk` (tile the file) → `inspect` (C2PA / EXIF / PNG text / source-type haystack) → UI. `strip` copies segments whose category is not identity/provenance (and optionally keeps ICC).
