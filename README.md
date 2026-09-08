@@ -1,8 +1,10 @@
-# Trace
+# AiStrip
 
 A single-page web app that shows what an image file is carrying — location, camera identity, generation prompts, C2PA Content Credentials — and strips that data without re-encoding the picture.
 
 Open `src/index.html` from disk. There is no build, no backend, and **no network requests**. Images are read with `FileReader` and never leave the machine.
+
+Released under the MIT licence. See `LICENSE`.
 
 ## Why ordinary tools miss AI provenance
 
@@ -15,13 +17,13 @@ Pillow, and most EXIF tools, parse the segments they know about and drop everyth
 | WebP | a `C2PA` RIFF chunk |
 | HEIF / AVIF | an ISOBMFF `uuid` box |
 
-Trace walks those containers in the browser and reports what it finds. It also surfaces GPS, camera serials, and generation leftovers in PNG text chunks (`parameters`, `prompt`, `workflow`, and similar).
+AiStrip walks those containers in the browser and reports what it finds. It also surfaces GPS, camera serials, and generation leftovers in PNG text chunks (`parameters`, `prompt`, `workflow`, and similar).
 
 ## What it cannot do
 
-Metadata is the fragile layer. Invisible watermarks such as SynthID live in the pixels. Stripping credentials leaves them intact, and Trace cannot detect them. A clean report means “no metadata signals”, not “not AI-generated”.
+Metadata is the fragile layer. Invisible watermarks such as SynthID live in the pixels. Stripping credentials leaves them intact, and AiStrip cannot detect them. A clean report means “no metadata signals”, not “not AI-generated”.
 
-Trace reads Content Credentials but does not verify their signatures.
+AiStrip reads Content Credentials but does not verify their signatures.
 
 Inspect: JPEG, PNG, WebP, HEIC/AVIF. Clean: JPEG, PNG, WebP (byte-copy, pixels untouched).
 
@@ -62,6 +64,7 @@ Workers & Pages → Create → Pages → **Direct Upload**. Upload the **content
 
 ```
 README.md           this file
+LICENSE             MIT licence
 .gitignore
 docs/PLANNING.md    architecture and constraints
 docs/TASK.md        current work

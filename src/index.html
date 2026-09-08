@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trace - see what's hidden in your photos</title>
+<title>AiStrip - see what's hidden in your photos</title>
 <style>
   :root {
     --bg:        #ffffff;
@@ -275,20 +275,20 @@
 <body>
 <div class="wrap">
 
-  <p class="brand">Trace</p>
+  <p class="brand">AiStrip</p>
 
   <div id="stage">
     <section class="intro" id="intro">
       <h1>See what's hidden in your photos.</h1>
       <p class="sub">Every image carries data you can't see: where it was taken, which camera took it,
-      and whether an AI made it. Trace shows you, then removes it.</p>
+      and whether an AI made it. AiStrip shows you, then removes it.</p>
 
       <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a photo to check">
         <p class="drop-title">Drop a photo here</p>
         <p class="drop-hint">or click to choose &middot; JPEG, PNG, WebP, HEIC</p>
       </div>
 
-      <p class="assurance">Your photo never leaves this device. Trace makes no network requests
+      <p class="assurance">Your photo never leaves this device. AiStrip makes no network requests
       and works with the internet switched off.</p>
 
       <input type="file" id="picker" accept="image/*" hidden>
@@ -296,18 +296,18 @@
   </div>
 
   <footer>
-    <p><b>What Trace removes.</b> The hidden data stored alongside the picture: GPS coordinates,
+    <p><b>What AiStrip removes.</b> The hidden data stored alongside the picture: GPS coordinates,
     camera and lens serial numbers, timestamps, editing history, generation prompts, and C2PA
     Content Credentials. The picture itself is copied across byte for byte, so cleaning costs you
     no image quality, however many times you do it.</p>
 
-    <p><b>What Trace cannot remove.</b> Some AI images also carry an invisible watermark such as
+    <p><b>What AiStrip cannot remove.</b> Some AI images also carry an invisible watermark such as
     SynthID, which is part of the pixels rather than the file's data. Cropping, filters, screenshots
     and this tool all leave it intact, and no tool that works on metadata can detect or remove it.
-    Trace will never tell you an image is untraceable, because it can't know that.</p>
+    AiStrip will never tell you an image is untraceable, because it can't know that.</p>
 
     <p>To check for a watermark you need the vendor's own verifier, such as
-    <a href="https://openai.com/verify/">openai.com/verify</a>. Trace reads Content Credentials but
+    <a href="https://openai.com/verify/">openai.com/verify</a>. AiStrip reads Content Credentials but
     does not verify their signatures; for that, use the Content Authenticity Initiative's
     <a href="https://opensource.contentauthenticity.org/docs/c2pa-js/">c2pa-web</a> library.</p>
   </footer>
@@ -316,11 +316,11 @@
 
 <script id="trace-core">
 /* =====================================================================
-   Trace core - pure functions, no DOM. Everything below operates on a
+   AiStrip core - pure functions, no DOM. Everything below operates on a
    Uint8Array and returns plain data, which keeps it testable outside a
    browser and keeps the UI layer thin.
    ===================================================================== */
-var Trace = (function () {
+var AiStrip = (function () {
   "use strict";
 
   var CAT = {
@@ -1192,12 +1192,12 @@ var Trace = (function () {
     extractManifest: extractManifest, summariseC2pa: summariseC2pa, parseTiff: parseTiff
   };
 })();
-if (typeof module !== "undefined") module.exports = Trace;
+if (typeof module !== "undefined") module.exports = AiStrip;
 </script>
 
 <script>
 /* ===================================================================
-   Presentation layer. Turns a Trace.inspect() report into the two
+   Presentation layer. Turns a AiStrip.inspect() report into the two
    things a person actually wants: a one-line answer, and a short list
    of what was found. Everything else lives behind "Show details".
    =================================================================== */
@@ -1241,7 +1241,7 @@ if (typeof module !== "undefined") module.exports = Trace;
   // ---------------------------------------------------------------
 
   function buckets(report) {
-    var by = Trace.totals(report.segments);
+    var by = AiStrip.totals(report.segments);
     var picture = (by.image || 0) + (by.structure || 0) + (by.profile || 0);
     return [
       { key: "picture",  label: "The picture",         bytes: picture },
@@ -1277,7 +1277,7 @@ if (typeof module !== "undefined") module.exports = Trace;
         list.push({
           tone: "ai",
           title: "Signed by " + esc(report.c2pa.certificate[0]),
-          detail: "Trace doesn't check the signature, so read this as a claim rather than proof."
+          detail: "AiStrip doesn't check the signature, so read this as a claim rather than proof."
         });
       }
     }
@@ -1379,7 +1379,7 @@ if (typeof module !== "undefined") module.exports = Trace;
           var v = Array.isArray(t.value)
             ? t.value.map(function (x) { return typeof x === "number" ? Math.round(x * 10000) / 10000 : x; }).join(", ")
             : t.value;
-          rows += '<tr class="' + (Trace.REVEALING[t.name] || g[0] === "gps" ? "warn" : "") + '">' +
+          rows += '<tr class="' + (AiStrip.REVEALING[t.name] || g[0] === "gps" ? "warn" : "") + '">' +
                   '<td class="k">' + esc(t.name) + "</td>" +
                   '<td class="v">' + esc(String(v).slice(0, 240)) + "</td></tr>";
         });
@@ -1393,7 +1393,7 @@ if (typeof module !== "undefined") module.exports = Trace;
               '<tr><td class="k">Stored in</td><td class="v">' + esc(c.where) + "</td></tr>" +
               '<tr><td class="k">Size</td><td class="v">' + c.bytes.toLocaleString("en-GB") + " bytes</td></tr>" +
               '<tr><td class="k">Signature</td><td class="v">' +
-                (c.signed ? "present, not verified by Trace" : "none found") + "</td></tr>";
+                (c.signed ? "present, not verified by AiStrip" : "none found") + "</td></tr>";
       if (c.certificate.length) {
         html += '<tr><td class="k">Certificate</td><td class="v">' + esc(c.certificate.join(", ")) + "</td></tr>";
       }
@@ -1444,9 +1444,9 @@ if (typeof module !== "undefined") module.exports = Trace;
     current = URL.createObjectURL(file);
 
     var report;
-    try { report = Trace.inspect(bytes); }
-    catch (err) { return fail(file, "Trace couldn't read this file: " + err.message); }
-    if (!report.format) return fail(file, "Trace reads JPEG, PNG, WebP, HEIC and AVIF. This is something else.");
+    try { report = AiStrip.inspect(bytes); }
+    catch (err) { return fail(file, "AiStrip couldn't read this file: " + err.message); }
+    if (!report.format) return fail(file, "AiStrip reads JPEG, PNG, WebP, HEIC and AVIF. This is something else.");
 
     var found = findings(report);
     var head = headlineFor(report, found);
@@ -1485,7 +1485,7 @@ if (typeof module !== "undefined") module.exports = Trace;
         "survives any metadata tool.</p>";
 
       act.querySelector(".go").addEventListener("click", function () {
-        var clean = Trace.strip(bytes, { keepColourProfile: act.querySelector(".keep").checked });
+        var clean = AiStrip.strip(bytes, { keepColourProfile: act.querySelector(".keep").checked });
         if (!clean) return;
         var url = URL.createObjectURL(new Blob([clean], { type: file.type || "application/octet-stream" }));
         var ext = (file.name.match(/(\.[^.]+)$/) || [""])[0];
@@ -1497,7 +1497,7 @@ if (typeof module !== "undefined") module.exports = Trace;
           '<a class="save" href="' + url + '" download="' + esc(name) + '">Save clean photo</a></div>';
       });
     } else if (!report.canStrip && found.length) {
-      act.innerHTML = '<p class="limit">Trace can read this format but can only clean JPEG, PNG and WebP so far.</p>';
+      act.innerHTML = '<p class="limit">AiStrip can read this format but can only clean JPEG, PNG and WebP so far.</p>';
     }
 
     show(el);

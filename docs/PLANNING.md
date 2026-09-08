@@ -15,6 +15,7 @@ Offline browser tool that shows what an image file is carrying (location, camera
 ```
 webapp/
   README.md            how to open locally and deploy to Cloudflare Pages
+  LICENSE              MIT licence
   .gitignore
   docs/PLANNING.md     this file
   docs/TASK.md         current work

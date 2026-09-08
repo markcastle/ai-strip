@@ -9,6 +9,7 @@ _(none)_
 - [x] 2026-09-08 — Analyse the webapp and write architecture notes (`docs/PLANNING.md`).
 - [x] 2026-09-08 — Move planning docs into `docs/`, add `.gitignore`, rename the app to `src/index.html`, add `src/_headers`, and document Cloudflare Pages dashboard deploy (no Wrangler).
 - [x] 2026-09-08 — Add Cloudflare Pages dashboard settings table to `README.md`.
+- [x] 2026-09-08 — Add MIT licence (`LICENSE`).
 
 ## Next (proposed — pick before coding)
 
