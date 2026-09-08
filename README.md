@@ -2,9 +2,42 @@
 
 A single-page web app that shows what an image file is carrying — location, camera identity, generation prompts, C2PA Content Credentials — and strips that data without re-encoding the picture.
 
-Open `public/index.html` from disk. There is no build, no backend, and **no network requests**. Images are read with `FileReader` and never leave the machine.
+The page itself makes **no network requests**. Images are read with `FileReader` and never leave the machine.
 
 Released under the MIT licence. See `LICENSE`.
+
+## Local use
+
+Open `src/index.html` in a browser, or build and open the published copy:
+
+```bash
+npm test
+npm run build
+```
+
+`npm run build` copies `src/` → `dist/`. Drop a photo, or click to choose one. Cleaning downloads a sibling `*-clean` file; the original is not overwritten.
+
+## Deploy to Cloudflare Pages (dashboard only)
+
+Do not use Wrangler. Connect the Git repo in the dashboard and use these build settings.
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | None |
+| Root directory | `/` if this folder is the Git repo; `webapp` if this app is a subdirectory of a larger repo |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Production branch | `master` (this repo's default branch; not `main` unless you rename it) |
+| Environment variables | none (optional: `NODE_VERSION` = `18`) |
+| Wrangler / Pages Functions | do not enable |
+
+Pages runs `npm install` then `npm run build`, and publishes `dist/`. That folder contains `index.html` at its top, so the site root is `/`.
+
+`src/_headers` is copied into `dist` and read by Pages as config (it is not a public page). It sets security headers, including a CSP that forbids `fetch`/`XHR` (`connect-src 'none'`) and allows the inlined CSS/JS plus `blob:` URLs for the thumbnail and the cleaned download.
+
+### Direct upload (no Git)
+
+Run `npm run build` locally, then Workers & Pages → Create → Pages → **Direct Upload**. Upload the **contents** of `dist` so `index.html` is at the top of the upload.
 
 ## Why ordinary tools miss AI provenance
 
@@ -27,49 +60,15 @@ AiStrip reads Content Credentials but does not verify their signatures.
 
 Inspect: JPEG, PNG, WebP, HEIC/AVIF. Clean: JPEG, PNG, WebP (byte-copy, pixels untouched).
 
-## Local use
-
-Open `public/index.html` in a browser. Drop a photo, or click to choose one. Cleaning downloads a sibling `*-clean` file; the original is not overwritten.
-
-## Deploy to Cloudflare Pages (dashboard only)
-
-This project is static files. It does **not** use Wrangler, Pages Functions, or a compiler. The dashboard still labels one field **Build output directory**; that just means “the folder whose contents become the website”. There is no build. That folder is `public/`.
-
-Only `public/` is published. `docs/` and this README stay off the live site. If you pointed output at `/` instead, Cloudflare would also serve the README, licence, and planning notes as web pages.
-
-### Build settings
-
-Use these values in **Workers & Pages → Create → Pages**, or later under the project's **Settings → Builds & deployments**.
-
-| Setting | Value |
-| --- | --- |
-| Framework preset | None |
-| Root directory | `/` if this folder is the Git repo; `webapp` if this app is a subdirectory of a larger repo |
-| Build command | *(leave blank)* — if the form requires a command, use `exit 0` |
-| Build output directory | `public` |
-| Environment variables | none |
-| Wrangler / Pages Functions | do not enable |
-
-Production branch is whatever you push as the default (usually `main`). No Node version, install command, or wrangler.toml is needed.
-
-After a successful deploy, `/` serves `public/index.html`. `public/_headers` is read by Pages as config (it is not a public page). It sets security headers, including a CSP that forbids `fetch`/`XHR` (`connect-src 'none'`) and allows the inlined CSS/JS plus `blob:` URLs for the thumbnail and the cleaned download.
-
-### Git
-
-Workers & Pages → Create → Pages → **Connect to Git**. Point it at this repository, apply the table above, save, and deploy.
-
-### Direct upload (no Git)
-
-Workers & Pages → Create → Pages → **Direct Upload**. Upload the **contents** of `public` so `index.html` is at the top of the upload, not nested as `public/index.html`.
-
 ## Layout
 
 ```
-README.md           this file
-LICENSE             MIT licence
-.gitignore
-docs/PLANNING.md    architecture and constraints
-docs/TASK.md        current work
-public/index.html   the app (this folder is what Cloudflare publishes)
-public/_headers     Cloudflare Pages response headers
+package.json
+scripts/build.js    copies src/ → dist/
+src/index.html      the app
+src/_headers        Cloudflare Pages response headers
+dist/               build output (gitignored; what Pages publishes)
+docs/PLANNING.md
+docs/TASK.md
+tests/build.test.js
 ```

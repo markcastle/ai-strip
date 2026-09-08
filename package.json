@@ -1,0 +1,12 @@
+{
+  "name": "aistrip",
+  "private": true,
+  "description": "Offline browser tool to inspect and strip image metadata.",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node --test tests/build.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

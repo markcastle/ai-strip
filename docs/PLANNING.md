@@ -4,8 +4,8 @@ Offline browser tool that shows what an image file is carrying (location, camera
 
 ## Product constraints (do not break these)
 
-- **No network.** Images are read with `FileReader` and never uploaded. The page must work opened from disk with the internet off.
-- **No build step required for a person using it.** Today that means one HTML file. If we split source, the shipped artefact should still be a single file or a tiny static set that works from `file://`.
+- **No network.** Images are read with `FileReader` and never uploaded. The page must work opened from disk (`src/index.html`) with the internet off.
+- **Deploy uses a normal npm build.** `npm run build` copies `src/` to `dist/`. Cloudflare Pages: build command `npm run build`, output directory `dist`. Do not publish the repo root.
 - **Lossless strip.** JPEG, PNG and WebP are rewritten by copying kept byte ranges. Do not decode through a canvas or re-compress pixels.
 - **Honest ceiling.** Do not claim watermark (SynthID) detection or removal. Do not claim C2PA signature verification unless we add a real verifier (that would cost the offline guarantee).
 - **One photo at a time.** A new drop replaces the previous report.
@@ -14,20 +14,24 @@ Offline browser tool that shows what an image file is carrying (location, camera
 
 ```
 webapp/
-  README.md            how to open locally and deploy to Cloudflare Pages
-  LICENSE              MIT licence
+  package.json
+  scripts/build.js     copies src/ → dist/
+  src/index.html       the app (CSS + core + UI)
+  src/_headers         Cloudflare Pages headers (copied into dist)
+  dist/                generated; gitignored; Pages publishes this
+  tests/build.test.js
+  README.md
+  LICENSE
   .gitignore
   docs/PLANNING.md     this file
   docs/TASK.md         current work
-  public/index.html    the entire web app (CSS + core + UI)
-  public/_headers      Cloudflare Pages headers (not served as a page)
 ```
 
 Stay inside this repository root unless explicitly asked to look elsewhere.
 
-Cloudflare Pages publishes **only** `public/` (dashboard: framework None, empty build command or `exit 0`, output directory `public`). Do not add Wrangler, `wrangler.toml`, or Pages Functions unless that decision is made on purpose.
+Cloudflare Pages (dashboard, no Wrangler): framework None, build command `npm run build`, build output directory `dist`, production branch `master`.
 
-## Architecture of `public/index.html`
+## Architecture of `src/index.html`
 
 Two IIFEs, already separated in comments:
 
@@ -61,7 +65,7 @@ Segment categories: `image`, `provenance`, `identity`, `profile`, `structure`. T
 - British English (`en-GB`), calm copy, no hype.
 - ES5-era JavaScript (`var`, IIFEs, `"use strict"`) so it runs in old browsers without a toolchain. Prefer that unless we explicitly adopt a module+build path.
 - Google-style docstrings in Python; XML comments in C# (N/A here).
-- Files under 500 lines. `public/index.html` currently violates this (~1568 lines) — split before adding large features.
+- Files under 500 lines. `src/index.html` currently violates this (~1568 lines) — split before adding large features.
 - Tests live in `/tests`. New core behaviour needs: expected case, edge case, failure case.
 - Extension methods preferred in C# (N/A here).
 

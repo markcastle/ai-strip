@@ -23,7 +23,7 @@ $RECYCLE.BIN/
 *.pem
 *.key
 
-# Node (for future tests; this app has no build)
+# Node
 node_modules/
 npm-debug.log*
 yarn-error.log*
