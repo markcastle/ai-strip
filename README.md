@@ -19,19 +19,23 @@ npm run build
 
 ## Deploy to Cloudflare Pages (dashboard only)
 
-Do not use Wrangler. Connect the Git repo in the dashboard and use these build settings.
+Do not use Wrangler. Connect the Git repo and set **Build output directory** to `dist`.
+
+The last deploy failed because the dashboard had **no build command**, so Pages never created `dist/` and then looked for it. `dist/` is now **in the repository**, so that combination works: blank build command + output `dist`.
 
 | Setting | Value |
 | --- | --- |
 | Framework preset | None |
 | Root directory | `/` if this folder is the Git repo; `webapp` if this app is a subdirectory of a larger repo |
-| Build command | `npm run build` |
+| Build command | leave **blank**, or `npm run build` |
 | Build output directory | `dist` |
-| Production branch | `master` (this repo's default branch; not `main` unless you rename it) |
-| Environment variables | none (optional: `NODE_VERSION` = `18`) |
+| Production branch | `master` |
+| Environment variables | none |
 | Wrangler / Pages Functions | do not enable |
 
-Pages runs `npm install` then `npm run build`, and publishes `dist/`. That folder contains `index.html` at its top, so the site root is `/`.
+If you fill in `npm run build`, Pages rebuilds `dist/` on their machines. If you leave the command blank, they publish the `dist/` that is already in git. Either way the site root is `/`.
+
+After you push, open **Deployments** and **Retry** the last deployment (or push a new commit). Do not point the output directory at `/` or `src`.
 
 `src/_headers` is copied into `dist` and read by Pages as config (it is not a public page). It sets security headers, including a CSP that forbids `fetch`/`XHR` (`connect-src 'none'`) and allows the inlined CSS/JS plus `blob:` URLs for the thumbnail and the cleaned download.
 
@@ -67,7 +71,7 @@ package.json
 scripts/build.js    copies src/ → dist/
 src/index.html      the app
 src/_headers        Cloudflare Pages response headers
-dist/               build output (gitignored; what Pages publishes)
+dist/               build output (committed; what Pages publishes)
 docs/PLANNING.md
 docs/TASK.md
 tests/build.test.js

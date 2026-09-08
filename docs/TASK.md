@@ -11,7 +11,7 @@ _(none)_
 - [x] 2026-09-08 — Add Cloudflare Pages dashboard settings table to `README.md`.
 - [x] 2026-09-08 — Add MIT licence (`LICENSE`).
 - [x] 2026-09-08 — Rename product from Trace to AiStrip.
-- [x] 2026-09-08 — Add `npm run build` (`src/` → `dist/`) so Pages uses a normal build command and output directory `dist`.
+- [x] 2026-09-08 — Commit `dist/` so Pages deploys when the dashboard build command is blank (`Output directory "dist" not found`).
 
 ## Next (proposed — pick before coding)
 

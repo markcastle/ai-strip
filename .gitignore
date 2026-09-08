@@ -30,7 +30,6 @@ yarn-error.log*
 pnpm-debug.log*
 coverage/
 .nyc_output/
-dist/
 
 # Python (for future tests)
 __pycache__/
